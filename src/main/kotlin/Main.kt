@@ -1,32 +1,48 @@
 package online.ojaoma
 
-import com.google.gson.Gson
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse.BodyHandlers
-import java.net.http.HttpResponse
+import online.ojaoma.model.Jogo
+import online.ojaoma.services.ConsumoApi
+import java.util.*
 
 
 fun main() {
-    val client: HttpClient = HttpClient.newHttpClient()
-    val request : HttpRequest  = HttpRequest.newBuilder()
-        .uri(URI.create("https://www.cheapshark.com/api/1.0/games?id=146"))
-        .build()
+    val leitura = Scanner(System.`in`)
+    println("Digite um código de jogo para buscar: ")
+    val busca = leitura.nextLine()
 
-    val response: HttpResponse<String> = client
-        .send(request, BodyHandlers.ofString())
+    val buscaApi = ConsumoApi()
+    val informacaoJogo = buscaApi.buscaJogo(busca)
 
-    val json = response.body().also {
-        println(it)
+    var meuJogo: Jogo? = null
+
+    val resultado = runCatching {
+         meuJogo = Jogo(
+            informacaoJogo.info.title,
+            informacaoJogo.info.thumb
+        )
+        println(meuJogo)
     }
 
-    val gson = Gson()
-    val meuInfoJogo = gson.fromJson(json, InfoJogo::class.java)
+    resultado.onFailure {
+        println("Jogo inexistente. Tente outro id.")
+    }
 
-    val meuJogo = Jogo(
-        meuInfoJogo.info.title,
-        meuInfoJogo.info.thumb)
+    resultado.onSuccess {
+        println("Deseja inserir uma descrição personalizada? S/N")
+        val opcao = leitura.nextLine()
+        if (opcao.equals("s", true)) {
+            println("Insira a descrição personalizada para o jogo:")
+            val descricaoPersonalizada = leitura.nextLine();
+            meuJogo?.descricao = descricaoPersonalizada
+        } else {
+            meuJogo?.descricao = meuJogo?.titulo.toString()
+        }
 
-    println(meuJogo)
+
+        println(meuJogo)
+    }
+    resultado.onSuccess {
+        println("Busca finalizada com sucesso.")
+    }
 }
+

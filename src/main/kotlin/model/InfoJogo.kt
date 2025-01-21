@@ -1,6 +1,6 @@
-package online.ojaoma
+package online.ojaoma.model
 
-data class InfoJogo (val info:InfoApiShark){
+data class InfoJogo (val info: InfoApiShark){
     override fun toString(): String {
         return info.toString()
     }
